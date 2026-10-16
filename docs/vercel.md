@@ -41,6 +41,7 @@ direta do provedor). Na raiz, em um terminal PowerShell:
 
 ```powershell
 $env:DATABASE_URL = 'postgresql://USUARIO:SENHA@HOST:5432/BANCO?sslmode=require'
+$env:DIRECT_URL = $env:DATABASE_URL
 npm run db:migrate:postgres -w @psigest/api
 ```
 
@@ -61,21 +62,41 @@ de desenvolvimento dedicado e versione os arquivos de migração antes do deploy
 3. Cadastre as variáveis abaixo nos ambientes desejados.
 4. Aplique as migrações no banco correspondente e então faça o deploy.
 
+### Projeto `psi-hub-byslooti`
+
+O projeto existente foi apontado para a raiz do repositório. As variáveis
+`DATABASE_URL`, `DIRECT_URL` e `JWT_SECRET` foram adicionadas como segredos de
+Production na Vercel. A migração inicial foi aplicada no Supabase e uma leitura
+real via Prisma Client com o pooler de transações confirmou a conexão. Um arquivo
+local `apps/api/.env.supabase` (ignorado pelo Git) contém os mesmos valores para
+diagnóstico; `apps/api/.env` permanece para o desenvolvimento SQLite.
+
+Essas variáveis não foram configuradas para Preview ou Development, que devem
+usar um banco separado antes de executar essas implantações.
+
 | Variável | Valor e finalidade |
 | --- | --- |
 | `DATABASE_URL` | URL PostgreSQL usada pela API, nunca `file:...` na Vercel |
+| `DIRECT_URL` | URL de conexão direta ou pooler de sessão na porta 5432, usada nas migrações Prisma |
 | `JWT_SECRET` | Segredo aleatório de pelo menos 32 caracteres, estável entre deploys do mesmo ambiente |
 
 Não prefixe segredos com `VITE_`. Não é necessário definir `PORT` na Vercel;
 o entrypoint respeita a porta fornecida pelo runtime. O servidor recusa segredo
 de desenvolvimento em produção e SQLite quando `VERCEL=1`.
 
+No Supabase, use a URL do pooler de transações (porta 6543) para `DATABASE_URL`,
+com `pgbouncer=true`, `connection_limit=1` e `sslmode=require`. Use a URL do
+pooler de sessão (porta 5432) ou a conexão direta para `DIRECT_URL`, sem
+`pgbouncer=true`. Se a senha contiver caracteres reservados como `@`, codifique
+esses caracteres na URL (`@` vira `%40`). A variável `DIRECT_URL` não é um
+binding de serviço; é uma segunda conexão ao mesmo banco.
+
 Para gerar um segredo localmente: `node -e "console.log(require('node:crypto').randomBytes(48).toString('hex'))"`.
 Copie o resultado diretamente para as variáveis do projeto; não o versione.
 
 ## Verificação local e depois do deploy
 
-Com `DATABASE_URL` e `JWT_SECRET` definidos no terminal:
+Com `DATABASE_URL`, `DIRECT_URL` e `JWT_SECRET` definidos no terminal:
 
 ```powershell
 npm ci
