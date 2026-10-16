@@ -42,3 +42,5 @@ Thumbs.db
 !.env.example
 *.db-wal
 *.db-shm
+.vercel/
+apps/api/prisma/schema.postgresql.prisma

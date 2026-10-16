@@ -183,7 +183,7 @@ export async function portalDownload(path: string, fileName: string) {
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
-export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024
+export const MAX_UPLOAD_BYTES = 3 * 1024 * 1024
 
 export function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {

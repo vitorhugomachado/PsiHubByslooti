@@ -83,7 +83,7 @@ export function PortalFinance() {
     if (!file) return
     setError('')
     if (file.size > MAX_UPLOAD_BYTES) {
-      setError('O arquivo precisa ter menos de 5 MB.')
+      setError('O arquivo precisa ter menos de 3 MB.')
       return
     }
     const dataBase64 = await fileToBase64(file)

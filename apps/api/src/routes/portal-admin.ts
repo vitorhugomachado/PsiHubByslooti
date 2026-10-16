@@ -10,7 +10,7 @@ import { authenticate } from '../lib/auth'
    no portal (recados, documentos, materiais, tarefas e comprovantes).
    ========================================================================== */
 
-const MAX_FILE_BYTES = 5 * 1024 * 1024 // 5 MB
+const MAX_FILE_BYTES = 3 * 1024 * 1024 // 3 MB
 const TEMP_ALPHABET = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789'
 
 function tempPassword(length = 8): string {
@@ -225,7 +225,7 @@ export async function portalAdminRoutes(app: FastifyInstance) {
     const data = parsed.data
     const buffer = base64ToBuffer(data.dataBase64)
     if (buffer.length === 0) return reply.code(400).send({ error: 'Arquivo vazio' })
-    if (buffer.length > MAX_FILE_BYTES) return reply.code(413).send({ error: 'Arquivo muito grande (limite de 5 MB)' })
+    if (buffer.length > MAX_FILE_BYTES) return reply.code(413).send({ error: 'Arquivo muito grande (limite de 3 MB)' })
 
     const doc = await prisma.document.create({
       data: {

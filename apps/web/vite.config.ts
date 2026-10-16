@@ -11,6 +11,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icon.svg'],
       devOptions: { enabled: true },
+      workbox: { navigateFallbackDenylist: [/^\/api(?:\/|$)/] },
       manifest: {
         name: 'Psi Hub - Sistema para Psicologos',
         short_name: 'Psi Hub',
@@ -37,7 +38,6 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:3000',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
       },
     },
   },

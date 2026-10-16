@@ -510,7 +510,7 @@ export function PatientPortalTab({
             </Select>
           </div>
           <div>
-            <Label>Anexo (PDF ou imagem, até 5 MB)</Label>
+            <Label>Anexo (PDF ou imagem, até 3 MB)</Label>
             <input
               type="file"
               accept="application/pdf,image/*"
@@ -520,7 +520,7 @@ export function PatientPortalTab({
                 e.target.value = ''
                 if (!file) return
                 if (!docTitle.trim()) return setError('Dê um título ao documento antes de anexar o arquivo.')
-                if (file.size > MAX_UPLOAD_BYTES) return setError('O arquivo precisa ter menos de 5 MB.')
+                if (file.size > MAX_UPLOAD_BYTES) return setError('O arquivo precisa ter menos de 3 MB.')
                 setError('')
                 const dataBase64 = await fileToBase64(file)
                 addDocument.mutate({

@@ -10,7 +10,7 @@ import { authenticatePatient } from '../lib/auth'
    vindo do front: tudo e sempre filtrado por request.patient.id.
    ========================================================================== */
 
-const MAX_FILE_BYTES = 5 * 1024 * 1024 // 5 MB
+const MAX_FILE_BYTES = 3 * 1024 * 1024 // 3 MB
 
 const credentialsSchema = z.object({
   email: z.string().email(),
@@ -245,7 +245,7 @@ export async function portalRoutes(app: FastifyInstance) {
       const data = parsed.data
       const buffer = base64ToBuffer(data.dataBase64)
       if (buffer.length === 0) return reply.code(400).send({ error: 'Arquivo vazio' })
-      if (buffer.length > MAX_FILE_BYTES) return reply.code(413).send({ error: 'Arquivo muito grande (limite de 5 MB)' })
+      if (buffer.length > MAX_FILE_BYTES) return reply.code(413).send({ error: 'Arquivo muito grande (limite de 3 MB)' })
 
       if (data.paymentId) {
         const payment = await prisma.payment.findFirst({ where: { id: data.paymentId, patientId: request.patient!.id } })

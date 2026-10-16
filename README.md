@@ -64,7 +64,7 @@ O portal oferece:
 - Materiais recomendados por links e tarefas entre sessões, com marcação de conclusão.
 - Atualização de telefone e e-mail.
 
-A clínica administra recados, documentos, materiais, tarefas e comprovantes pelo perfil do paciente. Arquivos são enviados em base64 e armazenados como BLOB no banco, com limite de 5 MB por arquivo; o servidor aceita corpos de requisição de até 10 MB.
+A clínica administra recados, documentos, materiais, tarefas e comprovantes pelo perfil do paciente. Arquivos são enviados em base64 e armazenados como BLOB no banco, com limite de 3 MB por arquivo; o servidor aceita corpos de requisição de aproximadamente 4,4 MiB.
 
 ### Páginas públicas e PWA
 
@@ -114,7 +114,7 @@ npm run dev
 Em bash, use `export DATABASE_URL='file:./dev.db'`, `export JWT_SECRET='seu-segredo'` e `export PORT=3000` antes dos mesmos comandos npm.
 
 - Aplicação: http://localhost:5173
-- Saúde da API: http://localhost:3000/health
+- Saúde da API: http://localhost:3000/api/health
 - Portal: http://localhost:5173/portal/login
 - Demonstração criada pelo seed: `admin@psigest.com` / `123456`.
 
@@ -162,13 +162,13 @@ apps/
 docs/screenshots/          Capturas utilizadas neste README
 ```
 
-O navegador chama `/api`, e o proxy de desenvolvimento do Vite encaminha para a API na porta 3000 removendo esse prefixo. O backend valida entradas com Zod e acessa o SQLite pelo Prisma. Em produção, é necessário configurar o encaminhamento de `/api` e o fallback das rotas do frontend no servidor de hospedagem.
+O navegador chama `/api`, e o proxy de desenvolvimento do Vite encaminha para a API na porta 3000 preservando esse prefixo. O backend valida entradas com Zod e acessa o SQLite pelo Prisma. Em produção, é necessário configurar o encaminhamento de `/api` e o fallback das rotas do frontend no servidor de hospedagem.
 
 O banco contém Clinic, User, Patient, Appointment e Payment, além de Message, Document, Material, Task e Proof para o portal. O cliente Prisma é gerado em `apps/api/src/generated/prisma` e não faz parte do Git.
 
 ## API
 
-Rotas abaixo são relativas a `http://localhost:3000`. As rotas privadas exigem `Authorization: Bearer <token>`; o portal usa token de paciente separado do acesso da clínica.
+Rotas abaixo são relativas a `http://localhost:3000/api`. As rotas privadas exigem `Authorization: Bearer <token>`; o portal usa token de paciente separado do acesso da clínica.
 
 | Grupo | Endpoints e responsabilidade |
 | --- | --- |
@@ -196,9 +196,13 @@ Nos grupos com sufixos abreviados, o prefixo anterior completo é mantido. Para 
 - Prontuário clínico e evolução estruturada ainda não estão implementados; existem anotações internas.
 - Lembretes automáticos, integração bancária, assinaturas e aplicativo nativo não estão implementados.
 - O login do portal busca por e-mail entre pacientes habilitados, sem seleção de clínica: e-mails repetidos em clínicas diferentes precisam de revisão antes de uso em produção.
-- O servidor permite CORS amplo e possui segredo JWT de fallback para desenvolvimento. Configure segredo forte, origens permitidas, HTTPS, backups e controles de acesso adequados antes de hospedar dados reais.
+- CORS amplo e segredo JWT de fallback ficam restritos ao desenvolvimento. Em produção, as chamadas são no mesmo domínio e JWT_SECRET deve ter ao menos 32 caracteres. Configure HTTPS, backups e controles de acesso adequados antes de hospedar dados reais.
 - Uma migração para PostgreSQL exige adaptar a configuração, criar migrações e planejar a transferência dos dados; mudar apenas o provider não transfere o SQLite existente.
 
 ## Validação desta publicação
 
-Executados com sucesso: `npm run build` e `npm run typecheck --workspaces --if-present`. O build emite aviso de bundle JavaScript acima de 500 kB. Não há suíte de testes automatizados configurada; as capturas registram a navegação manual nas telas de demonstração.
+Executados com sucesso: `npm run build` e `npm run typecheck --workspaces --if-present`. O build emite aviso de bundle JavaScript acima de 500 kB. Há testes de roteamento e configuração em `npm run test -w @psigest/api`; as capturas registram a navegação manual nas telas de demonstração.
+
+## Deploy na Vercel
+
+Configuração com dois serviços e PostgreSQL: consulte [o guia de deploy](docs/vercel.md). O arquivo vercel.json fica na raiz. A topologia foi aprovada; o banco e as variáveis precisam ser configurados antes do deploy.

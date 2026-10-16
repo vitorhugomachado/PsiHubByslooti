@@ -1,0 +1,14 @@
+**/node_modules/**
+**/.env
+**/.env.*
+**/*.db
+**/*.db-journal
+**/*.db-wal
+**/*.db-shm
+**/dist/**
+**/dev-dist/**
+**/*.log
+**/*.tsbuildinfo
+apps/api/src/generated/**
+apps/api/prisma/schema.postgresql.prisma
+docs/screenshots/**
