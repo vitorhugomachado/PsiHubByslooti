@@ -1,0 +1,22 @@
+{
+  "name": "psigest",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Psi Hub - Sistema de gestao para psicologos (SaaS multi-clinica)",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n api,web -c blue,green \"npm run dev -w @psigest/api\" \"npm run dev -w @psigest/web\"",
+    "dev:api": "npm run dev -w @psigest/api",
+    "dev:web": "npm run dev -w @psigest/web",
+    "db:push": "npm run db:push -w @psigest/api",
+    "db:seed": "npm run db:seed -w @psigest/api",
+    "setup": "npm install && npm run db:push && npm run db:seed",
+    "build": "npm run build -w @psigest/web"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "prisma": "^6.19.3"
+  }
+}

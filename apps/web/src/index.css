@@ -1,0 +1,252 @@
+@import 'tailwindcss';
+
+/* ---------- Design tokens (branding Psi Hub) ---------- */
+@theme {
+  /* Cores */
+  --color-ink: #0b0b12;
+  --color-brand: #2e7bf6;
+  --color-hub: #1a9cfc;
+  --color-brand-dark: #1d5fce;
+  --color-brand-light: #dbeafe;
+  --color-cream: #fff6e9;
+  --color-sun: #ffd43b;
+  --color-pop: #ff4d6d;
+  --color-slooti: #f97316;
+
+  /* Fontes */
+  --font-display: 'Anton', ui-sans-serif, system-ui, sans-serif;
+  --font-round: 'Baloo 2', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Nunito', ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background-color: var(--color-cream);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- Utilitarios "sticker" (versao suave) ---------- */
+@layer components {
+  /* Sombra leve e discreta, em vez do preto solido */
+  .shadow-ink {
+    box-shadow: 1.5px 1.5px 0 0 rgba(11, 11, 18, 0.75);
+  }
+
+  .shadow-ink-lg {
+    box-shadow: 3px 3px 0 0 rgba(11, 11, 18, 0.75);
+  }
+
+  /* Menu lateral do desktop: rail fino (76px) que abre ao passar o mouse
+     ou quando fica "fixado" no clique. */
+  .rail-menu {
+    width: 76px;
+    transition:
+      width 200ms ease-out,
+      box-shadow 200ms ease-out;
+  }
+
+  .rail-menu[data-aberto='true'] {
+    width: 288px;
+    box-shadow: 6px 0 18px rgba(11, 11, 18, 0.1);
+  }
+
+  .ink-border {
+    border: 1px solid var(--color-ink);
+  }
+
+  .sticker {
+    border: 1px solid var(--color-ink);
+    box-shadow: 1.5px 1.5px 0 0 rgba(11, 11, 18, 0.75);
+  }
+
+  /* Palavra destacada dentro de um titulo (o "adesivo" da marca).
+     O padding e a borda sao cancelados por margens negativas: a palavra fica
+     na mesma coluna do resto da frase (mesmo caindo no inicio de uma linha) e
+     sobra um espaco igual ao das outras palavras dos dois lados. O vertical
+     foi calculado a partir das metricas da Anton (caixa 56/16, maiusculas 42)
+     para o adesivo abracar as letras sem deslocar a linha. */
+  .sticker-word {
+    display: inline-block;
+    border: 1px solid var(--color-ink);
+    border-radius: 0.4em;
+    box-shadow: 1.5px 1.5px 0 0 rgba(11, 11, 18, 0.75);
+    padding: 0.06em 0.14em 0.02em;
+    margin: 0 0.05em 0 -0.16em;
+    line-height: 1em;
+  }
+
+  /* Titulo que usa .sticker-word: mais respiro entre as palavras. */
+  .title-chips {
+    word-spacing: 0.12em;
+  }
+
+  .sticker-lg {
+    border: 1px solid var(--color-ink);
+    box-shadow: 3px 3px 0 0 rgba(11, 11, 18, 0.75);
+  }
+
+  .sticker-press {
+    transition:
+      transform 90ms ease,
+      box-shadow 90ms ease;
+  }
+  .sticker-press:hover {
+    box-shadow: 2px 2px 0 0 rgba(11, 11, 18, 0.75);
+  }
+  .sticker-press:active {
+    transform: translate(1.5px, 1.5px);
+    box-shadow: 0 0 0 0 rgba(11, 11, 18, 0.75);
+  }
+
+  /* Textura de pontinhos (bem sutil) */
+  .bg-dots {
+    background-image: radial-gradient(rgba(11, 11, 18, 0.1) 1.2px, transparent 1.2px);
+    background-size: 22px 22px;
+  }
+
+  .text-outline {
+    -webkit-text-stroke: 1.5px var(--color-ink);
+    color: transparent;
+  }
+}
+
+/* Letreiro que rola no topo (marquee): o trilho tem as duas copias da lista
+   lado a lado e anda -50% em loop, entao o fim de uma emenda no inicio da outra. */
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 32s linear infinite;
+}
+
+/* Mesma faixa, andando pro outro lado (linha de icones). */
+.marquee-track-reverse {
+  display: flex;
+  width: max-content;
+  animation: marquee 40s linear infinite reverse;
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* ============================================================================
+   Lixeira da agenda (arrastar o paciente para cancelar)
+   ----------------------------------------------------------------------------
+   O card solto na lixeira e "sugado": um clone do card voa ate o centro da
+   lixeira (--suck-x/--suck-y vem do JS, em px) encolhendo e girando, enquanto
+   a lixeira da um pulinho (bin-gulp) e solta uma fumacinha (bin-puff).
+   ========================================================================== */
+
+@keyframes bin-suck {
+  0% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  45% {
+    transform: translate(calc(var(--suck-x, 0px) * 0.45), calc(var(--suck-y, 0px) * 0.45 - 16px)) scale(0.78) rotate(-5deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--suck-x, 0px), var(--suck-y, 0px)) scale(0.1) rotate(16deg);
+    opacity: 0;
+  }
+}
+
+.bin-suck {
+  animation: bin-suck 430ms cubic-bezier(0.45, -0.15, 0.75, 0.55) forwards;
+  pointer-events: none;
+  z-index: 70;
+  will-change: transform, opacity;
+}
+
+@keyframes bin-gulp {
+  0% {
+    transform: scale(1.16) rotate(-2deg);
+  }
+  30% {
+    transform: scale(0.9) rotate(1.6deg);
+  }
+  55% {
+    transform: scale(1.09) rotate(-1deg);
+  }
+  75% {
+    transform: scale(0.97) rotate(0.5deg);
+  }
+  100% {
+    transform: scale(1) rotate(0);
+  }
+}
+
+.bin-gulp {
+  animation: bin-gulp 560ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes bin-puff {
+  0% {
+    transform: translate(0, 0) scale(0.3);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(var(--puff-x, 0px), var(--puff-y, 0px)) scale(1);
+    opacity: 0;
+  }
+}
+
+.bin-puff {
+  animation: bin-puff 620ms ease-out forwards;
+}
+
+/* A lixeira fica "faminta" (balancinho) enquanto alguem esta sendo arrastado. */
+@keyframes bin-wait {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-4px) rotate(-2deg);
+  }
+}
+
+.bin-wait {
+  animation: bin-wait 1.05s ease-in-out infinite;
+}
+
+/* Tampa: abre de vez quando o card esta por cima. */
+.bin-tampa {
+  transform-box: fill-box;
+  transform-origin: 12% 85%;
+  transition: transform 180ms ease-out;
+}
+
+[data-fome='true'] .bin-tampa {
+  transform: rotate(-34deg) translate(-1px, -1px);
+}
+
+.bin-carinha {
+  opacity: 0;
+  transition: opacity 120ms ease-out;
+}
+
+[data-fome='true'] .bin-carinha {
+  opacity: 1;
+}

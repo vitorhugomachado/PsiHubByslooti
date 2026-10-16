@@ -1,0 +1,44 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# builds
+dist/
+build/
+apps/web/dist/
+apps/api/dist/
+
+# database
+*.db
+*.db-journal
+apps/api/prisma/dev.db
+apps/api/prisma/dev.db-journal
+
+# prisma generated client
+apps/api/src/generated/
+
+# env
+.env
+.env.local
+.env.*.local
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# editor / os
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# development artifacts and private configuration
+**/dev-dist/
+*.tsbuildinfo
+.env.*
+!.env.example
+*.db-wal
+*.db-shm

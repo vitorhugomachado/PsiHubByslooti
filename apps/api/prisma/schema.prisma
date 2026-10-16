@@ -1,0 +1,211 @@
+// Schema do banco de dados (Prisma).
+// SQLite nao suporta ENUM nativo, por isso usamos campos String com valores
+// controlados pela aplicacao (comentados em cada campo).
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Uma "Clinica" e o tenant: cada psicologo (ou grupo) tem a sua.
+model Clinic {
+  id           String        @id @default(cuid())
+  name         String
+  slug         String        @unique
+  pixKey       String? // chave PIX mostrada no portal do paciente
+  createdAt    DateTime      @default(now())
+  users        User[]
+  patients     Patient[]
+  appointments Appointment[]
+  payments     Payment[]
+  messages     Message[]
+  documents    Document[]
+  materials    Material[]
+  tasks        Task[]
+  proofs       Proof[]
+}
+
+// Usuarios que acessam o sistema (profissional, secretaria, admin...).
+model User {
+  id           String        @id @default(cuid())
+  clinicId     String
+  clinic       Clinic        @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  name         String
+  email        String        @unique
+  passwordHash String
+  role         String        @default("PSYCHOLOGIST") // ADMIN | PSYCHOLOGIST | SECRETARY
+  createdAt    DateTime      @default(now())
+  appointments Appointment[] @relation("PsychologistAppointments")
+}
+
+// Pacientes atendidos pela clinica.
+model Patient {
+  id                  String        @id @default(cuid())
+  clinicId            String
+  clinic              Clinic        @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  name                String
+  email               String?
+  phone               String?
+  birthDate           DateTime?
+  document            String? // CPF
+  notes               String?
+  address             String?
+  emergencyContact    String? // nome do contato de emergencia
+  emergencyPhone      String?
+  referralSource      String? // como conheceu a clinica (indicacao, instagram...)
+  defaultSessionPrice Float? // valor padrao da sessao: pre-preenche cobrancas
+  consentAt           DateTime? // consentimento LGPD registrado em
+  status              String        @default("ACTIVE") // ACTIVE | INACTIVE
+  deletedAt           DateTime? // exclusao logica (soft delete)
+  // --- Portal do paciente ---
+  portalEnabled       Boolean       @default(false) // a clinica liberou o acesso
+  portalPassword      String? // hash bcrypt da senha do paciente
+  portalAcceptedAt    DateTime? // quando o paciente criou a senha
+  portalLastSeenAt    DateTime? // ultimo acesso ao portal
+  createdAt           DateTime      @default(now())
+  appointments        Appointment[]
+  payments            Payment[]
+  messages            Message[]
+  documents           Document[]
+  materials           Material[]
+  tasks               Task[]
+  proofs              Proof[]
+
+  @@index([clinicId, deletedAt])
+}
+
+// Sessoes / consultas agendadas.
+model Appointment {
+  id               String    @id @default(cuid())
+  clinicId         String
+  clinic           Clinic    @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  patientId        String
+  patient          Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  psychologistId   String
+  psychologist     User      @relation("PsychologistAppointments", fields: [psychologistId], references: [id])
+  startAt          DateTime
+  endAt            DateTime
+  status           String    @default("SCHEDULED") // SCHEDULED | CONFIRMED | IN_PROGRESS | DONE | CANCELED | NO_SHOW
+  modality         String    @default("IN_PERSON") // IN_PERSON | ONLINE
+  notes            String?
+  meetLink         String? // link da sala de video (Jitsi/Meet)
+  confirmedAt      DateTime? // confirmacao de presenca (pelo paciente ou pela clinica)
+  confirmedBy      String? // PATIENT | CLINIC
+  sessionStartedAt DateTime? // quando a sessao foi iniciada
+  sessionEndedAt   DateTime? // quando a sessao foi finalizada
+  createdAt        DateTime  @default(now())
+  payments         Payment[]
+}
+
+// Cobrancas e pagamentos.
+model Payment {
+  id          String   @id @default(cuid())
+  clinicId    String
+  clinic      Clinic   @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  patientId   String
+  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  appointmentId String?
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  amount      Float
+  status      String   @default("PENDING") // PENDING | PAID | OVERDUE
+  method      String? // PIX | CASH | CARD | TRANSFER
+  description String?
+  dueDate     DateTime
+  paidAt      DateTime?
+  createdAt   DateTime @default(now())
+  proofs      Proof[]
+}
+
+// ============================================================================
+// Portal do paciente
+// ============================================================================
+
+// Recados trocados entre o paciente (portal) e a clinica.
+model Message {
+  id        String   @id @default(cuid())
+  clinicId  String
+  clinic    Clinic   @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  patientId String
+  patient   Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  author    String // PATIENT | CLINIC
+  body      String
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([patientId, createdAt])
+}
+
+// Documentos que a clinica disponibiliza para o paciente (atestado, declaracao...).
+model Document {
+  id        String   @id @default(cuid())
+  clinicId  String
+  clinic    Clinic   @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  patientId String
+  patient   Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  title     String
+  kind      String   @default("OTHER") // CERTIFICATE | RECEIPT | REPORT | OTHER
+  fileName  String
+  mimeType  String
+  size      Int
+  data      Bytes // conteudo do arquivo (BLOB)
+  createdAt DateTime @default(now())
+
+  @@index([patientId, createdAt])
+}
+
+// Materiais recomendados pelo profissional (artigos, videos, audios, links).
+model Material {
+  id        String   @id @default(cuid())
+  clinicId  String
+  clinic    Clinic   @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  patientId String
+  patient   Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  title     String
+  kind      String   @default("LINK") // ARTICLE | VIDEO | AUDIO | LINK
+  url       String
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([patientId, createdAt])
+}
+
+// Tarefas / exercicios propostos entre as sessoes.
+model Task {
+  id          String    @id @default(cuid())
+  clinicId    String
+  clinic      Clinic    @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  patientId   String
+  patient     Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  dueDate     DateTime?
+  doneAt      DateTime? // marcado como feito pelo paciente
+  createdAt   DateTime  @default(now())
+
+  @@index([patientId, createdAt])
+}
+
+// Comprovantes de pagamento enviados pelo paciente pelo portal.
+model Proof {
+  id         String    @id @default(cuid())
+  clinicId   String
+  clinic     Clinic    @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  patientId  String
+  patient    Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  paymentId  String?
+  payment    Payment?  @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+  fileName   String
+  mimeType   String
+  size       Int
+  data       Bytes
+  note       String?
+  reviewedAt DateTime? // quando a clinica conferiu o comprovante
+  createdAt  DateTime  @default(now())
+
+  @@index([patientId, createdAt])
+}
